@@ -1,11 +1,12 @@
 import numpy as np
 import pandas as pd
 import streamlit as st
+from sklearn.preprocessing import normalize
 import joblib
-import sklearn as sklearn
 
 model = joblib.load("./models/trained_sleep_disorder_predictor.pkl")
 label_encoder = joblib.load('models/label_encoder.joblib')
+scaler = joblib.load('models/standard_scaler.joblib')
 
 
 # Title and description
@@ -27,7 +28,7 @@ with col2:
                               ['Accountant', 'Doctor', 'Engineer', 'Nurse', 'Salesperson', 'Teacher', 'Others'], 
                               help="Select your occupation")
     duration = st.number_input("Sleep Duration (Hours)", min_value=0.0, step=0.1, value=8.0, format="%.1f", help="Enter your average sleep duration in hours")
-    quality = st.slider('Sleep Quality', min_value=1, max_value=10, value=5, help="Rate your sleep quality from 1 (Bad) to 10 (Good)")
+    quality = st.slider('Sleep Quality', min_value=1, max_value=10, value=5, help="Rate your sleep quality from 1 (Good) to 10 (Bad)")
 
 with col3:
     activity = st.number_input("Physical Activity (Minutes)", min_value=0, help="Enter your daily physical activity in minutes")
@@ -67,13 +68,17 @@ if st.button('Predict'):
     options_object[gender] = 1
     options_object[occupation] = 1
     
-    input_features = [age, duration, quality, activity, stress, bpm, steps]
+    input_features = [age, duration, quality, activity, stress, bpm, steps, systolic, diastolic]
     
     for i in options_object:
         input_features.append(options_object[i])
-        
-    input_features.append(systolic)
-    input_features.append(diastolic)
     
-    prediction = model.predict([input_features])
+    #st.write(input_features)
+    
+    #st.write(model.predict(normalize(scaler.transform([(input_features)]))))
+    #st.write(model.predict(scaler.transform([(input_features)])))
+    #st.write(model.predict([(input_features)]))
+    
+    prediction = model.predict(normalize(scaler.transform([(input_features)])))
+    #prediction = model.predict([(input_features)])
     st.success(f'The prediction is: {label_encoder.inverse_transform((prediction))[0]}')
